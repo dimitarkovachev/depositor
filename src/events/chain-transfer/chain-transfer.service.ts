@@ -7,6 +7,7 @@ import { UpdateChainTransferDto } from './dto/update-chain-transfer.dto';
 import { DepositsService } from '../../deposits/deposits.service';
 import { CreateDepositDto } from '../../deposits/dto/create-deposit.dto';
 import { DepositStatus } from '../../deposits/entities/deposit.entity';
+import { DeadLetterLogService } from '../../core/dead-letter-log.service';
 
 @Injectable()
 export class ChainTransferService {
@@ -16,6 +17,7 @@ export class ChainTransferService {
     private readonly depositsService: DepositsService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly deadLetterLogService: DeadLetterLogService,
   ) {}
 
   async create(createChainTransferDto: CreateChainTransferDto) {
@@ -115,6 +117,13 @@ export class ChainTransferService {
     }
 
     this.logger.error(`Webhook call failed after ${maxRetries} attempts for txHash ${createChainTransferDto.txHash}`);
+    
+    // Write to dead letter log
+    try {
+      await this.deadLetterLogService.write(createChainTransferDto.txHash);
+    } catch (deadLetterError) {
+      this.logger.error(`Failed to write dead letter log for txHash ${createChainTransferDto.txHash}:`, deadLetterError);
+    }
   }
 
   private delay(ms: number): Promise<void> {
