@@ -72,13 +72,6 @@ cleanup() {
         wait $APP_PID 2>/dev/null || true
     fi
     
-    # Stop webhook server if it's running
-    if [ ! -z "$WEBHOOK_PID" ]; then
-        print_status "Stopping webhook server (PID: $WEBHOOK_PID)..."
-        kill $WEBHOOK_PID 2>/dev/null || true
-        wait $WEBHOOK_PID 2>/dev/null || true
-    fi
-    
     # Stop docker services
     print_status "Stopping Docker services..."
     docker-compose down 2>/dev/null || true
@@ -145,17 +138,6 @@ wait_for_service "http://localhost:3000/health" "Main Application" || {
     print_error "Main application failed to start"
     exit 1
 }
-
-# Start the webhook server
-# print_status "Starting webhook server..."
-# node e2e_test/e2e-webhook-server.js &
-# WEBHOOK_PID=$!
-
-# Wait for webhook server to be ready
-# wait_for_service "http://localhost:3001/health" "Webhook Server" || {
-#     print_error "Webhook server failed to start"
-#     exit 1
-# }
 
 # Run the e2e tests
 print_status "Running E2E tests..."
