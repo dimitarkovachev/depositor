@@ -4,6 +4,7 @@ import { ChainTransferService } from './chain-transfer.service';
 import { DepositsService } from '../../deposits/deposits.service';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
+import { DeadLetterLogService } from '../../core/dead-letter-log.service';
 
 describe('ChainTransferController', () => {
   let controller: ChainTransferController;
@@ -30,6 +31,12 @@ describe('ChainTransferController', () => {
           provide: HttpService,
           useValue: {
             post: jest.fn(),
+          },
+        },
+        {
+          provide: DeadLetterLogService,
+          useValue: {
+            write: jest.fn(),
           },
         },
       ],
